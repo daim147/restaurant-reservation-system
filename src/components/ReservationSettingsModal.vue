@@ -32,7 +32,7 @@
       <form @submit.prevent="saveSettings">
         <!-- Reservation Duration -->
         <div class="form-group">
-          <label for="duration" class="form-label">Reservation Duration*</label>
+          <label for="duration" class="form-label">Reservation Duration (minutes)*</label>
           <div class="input-wrapper">
             <input
               id="duration"
@@ -42,7 +42,6 @@
               required
               class="form-input"
             />
-            <span class="input-addon">minutes</span>
           </div>
         </div>
 
@@ -244,27 +243,17 @@ export default {
 
     addTimeSlot(day) {
       const startTime = '11:00';
+      const [hours, minutes] = startTime.split(':');
 
-      // Parse the start time
-      const [startHours, startMinutes] = startTime.split(':').map(Number);
+      // Calculate end time more efficiently
+      const endDate = new Date();
+      endDate.setHours(parseInt(hours, 10), parseInt(minutes, 10) + this.form.reservation_duration);
 
-      // Calculate end time by adding reservation duration
-      const startDate = new Date();
-      startDate.setHours(startHours, startMinutes, 0);
-
-      const endDate = new Date(startDate.getTime() + this.form.reservation_duration * 60000);
-
-      // Format end time as HH:MM
       const endHours = endDate.getHours().toString().padStart(2, '0');
       const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
       const endTime = `${endHours}:${endMinutes}`;
 
-      this.editingSlot = {
-        day,
-        index: null,
-        start: startTime,
-        end: endTime,
-      };
+      this.editingSlot = { day, index: null, start: startTime, end: endTime };
     },
 
     editTimeSlot(day, index) {
@@ -332,6 +321,25 @@ export default {
       });
     },
 
+    handleApiError(error, defaultMessage = 'An error occurred.') {
+      if (!error.response || !error.response.data) {
+        return defaultMessage;
+      }
+
+      const { data } = error.response;
+      // Extract first error key and it's value
+      if (data.errors) {
+        const errorKeys = Object.keys(data.errors);
+        if (errorKeys.length > 0) {
+          const firstKey = errorKeys[0];
+          const firstValue = data.errors[firstKey][0];
+          return `Error with ${firstKey}: ${firstValue}`;
+        }
+      }
+
+      return data.message || defaultMessage;
+    },
+
     async saveSettings() {
       await this.confirmUnsavedChanges();
 
@@ -350,25 +358,7 @@ export default {
       } catch (error) {
         console.error('Failed to save reservation settings:', error);
 
-        // Handle detailed error messages from the API
-        let errorMessage = 'Failed to save settings.';
-
-        if (error.response && error.response.data) {
-          if (error.response.data.errors) {
-            // Get the first error key and its first value
-            const errorKeys = Object.keys(error.response.data.errors);
-            if (errorKeys.length > 0) {
-              const firstKey = errorKeys[0];
-              const firstValue = error.response.data.errors[firstKey][0];
-              errorMessage = `Error with ${firstKey}: ${firstValue}`;
-            }
-          } else if (error.response.data.message) {
-            // Fallback to the generic message if available
-            errorMessage = error.response.data.message;
-          }
-        }
-
-        this.error = errorMessage;
+        this.error = this.handleApiError(error, 'Failed to save settings.');
       } finally {
         this.isSaving = false;
       }
