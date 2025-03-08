@@ -7,8 +7,13 @@
     <loading-spinner v-if="loading" message="Loading reservation settings..." />
 
     <div v-else-if="error" class="error-message">
-      <i class="error-icon">!</i>
-      <span>{{ error }}</span>
+      <div class="error-content">
+        <i class="error-icon">!</i>
+        <span>{{ error }}</span>
+      </div>
+      <button @click="clearError" class="btn-clear-error" title="Clear error">
+        <span aria-hidden="true">&times;</span>
+      </button>
     </div>
 
     <div v-else>
@@ -155,7 +160,9 @@ export default {
         reservation_times: defaultTimes,
       };
     },
-
+    clearError() {
+      this.error = null;
+    },
     isEditingDay(day) {
       return this.editingSlot && this.editingSlot.day === day;
     },
@@ -342,7 +349,26 @@ export default {
         this.close();
       } catch (error) {
         console.error('Failed to save reservation settings:', error);
-        this.error = `Failed to save settings. ${error.response.data.message}  Please try again.`;
+
+        // Handle detailed error messages from the API
+        let errorMessage = 'Failed to save settings.';
+
+        if (error.response && error.response.data) {
+          if (error.response.data.errors) {
+            // Get the first error key and its first value
+            const errorKeys = Object.keys(error.response.data.errors);
+            if (errorKeys.length > 0) {
+              const firstKey = errorKeys[0];
+              const firstValue = error.response.data.errors[firstKey][0];
+              errorMessage = `Error with ${firstKey}: ${firstValue}`;
+            }
+          } else if (error.response.data.message) {
+            // Fallback to the generic message if available
+            errorMessage = error.response.data.message;
+          }
+        }
+
+        this.error = errorMessage;
       } finally {
         this.isSaving = false;
       }
