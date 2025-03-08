@@ -141,11 +141,6 @@ export default {
         this.loadBranchData();
       }
     },
-    // branchId(newVal) {
-    //   if (newVal && this.show) {
-    //     this.loadBranchData();
-    //   }
-    // }
   },
   methods: {
     getDefaultForm() {
@@ -155,7 +150,7 @@ export default {
       });
 
       return {
-        reservation_duration: 120,
+        reservation_duration: 60,
         selected_tables: [],
         reservation_times: defaultTimes,
       };
@@ -188,7 +183,7 @@ export default {
       if (!this.branch) return;
 
       // Set reservation duration
-      this.form.reservation_duration = this.branch.reservation_duration || 120;
+      this.form.reservation_duration = this.branch.reservation_duration || 60;
 
       // Process reservation times
       if (this.branch.reservation_times) {
@@ -241,11 +236,27 @@ export default {
     },
 
     addTimeSlot(day) {
+      const startTime = '11:00';
+
+      // Parse the start time
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
+
+      // Calculate end time by adding reservation duration
+      const startDate = new Date();
+      startDate.setHours(startHours, startMinutes, 0);
+
+      const endDate = new Date(startDate.getTime() + this.form.reservation_duration * 60000);
+
+      // Format end time as HH:MM
+      const endHours = endDate.getHours().toString().padStart(2, '0');
+      const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
+      const endTime = `${endHours}:${endMinutes}`;
+
       this.editingSlot = {
         day,
         index: null,
-        start: '11:00',
-        end: '17:00',
+        start: startTime,
+        end: endTime,
       };
     },
 
