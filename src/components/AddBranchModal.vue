@@ -122,8 +122,7 @@ export default {
           this.isDropdownOpen = true;
         }
       } catch (error) {
-        console.error('Failed to load branches:', error);
-        this.error = `Failed to load branches: ${error.message || 'Unknown error'}`;
+        this.error = `Failed to load branches: ${error.message}`;
       } finally {
         this.loading = false;
       }
@@ -146,8 +145,7 @@ export default {
         this.$emit('branches-updated');
         this.close();
       } catch (error) {
-        console.error('Failed to save branches:', error);
-        this.error = 'Failed to save branch changes. Please try again.';
+        this.error = `Failed to save branch changes. ${error.message}`;
       } finally {
         this.isSaving = false;
       }

@@ -47,8 +47,7 @@ export default new Vuex.Store({
         commit('SET_BRANCHES', response.data.data);
         commit('SET_ERROR', null);
       } catch (error) {
-        console.error('Error fetching branches:', error);
-        commit('SET_ERROR', 'Failed to fetch branches. Please try again.');
+        commit('SET_ERROR', `Failed to fetch branches. ${error.message}`);
       } finally {
         commit('SET_LOADING', false);
       }
@@ -62,8 +61,7 @@ export default new Vuex.Store({
         commit('UPDATE_BRANCH', { id: branchId, accepts_reservations: false });
         commit('SET_ERROR', null);
       } catch (error) {
-        console.error('Error disabling branch reservation:', error);
-        commit('SET_ERROR', 'Failed to disable reservations. Please try again.');
+        commit('SET_ERROR', `Failed to disable reservations. ${error.message}`);
       } finally {
         commit('SET_LOADING', false);
       }
@@ -82,8 +80,7 @@ export default new Vuex.Store({
 
         commit('SET_ERROR', null);
       } catch (error) {
-        console.error('Error disabling all reservations:', error);
-        commit('SET_ERROR', 'Failed to disable all reservations. Please try again.');
+        commit('SET_ERROR', `Failed to disable all reservations. ${error.message}`);
       } finally {
         commit('SET_LOADING', false);
       }

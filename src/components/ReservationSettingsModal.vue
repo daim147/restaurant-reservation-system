@@ -160,7 +160,13 @@ export default {
       };
     },
     clearError() {
-      this.error = null;
+      console.log(this.branch);
+      if (this.branch) {
+        this.error = null;
+        return;
+      } else {
+        this.close();
+      }
     },
     isEditingDay(day) {
       return this.editingSlot && this.editingSlot.day === day;
@@ -178,8 +184,7 @@ export default {
         // Initialize form with branch data
         this.initializeFormFromBranch();
       } catch (error) {
-        console.error('Failed to load branch data:', error);
-        this.error = 'Failed to load branch data. Please try again.';
+        this.error = `Failed to load branches: ${error.message}`;
       } finally {
         this.loading = false;
       }
@@ -321,25 +326,6 @@ export default {
       });
     },
 
-    handleApiError(error, defaultMessage = 'An error occurred.') {
-      if (!error.response || !error.response.data) {
-        return defaultMessage;
-      }
-
-      const { data } = error.response;
-      // Extract first error key and it's value
-      if (data.errors) {
-        const errorKeys = Object.keys(data.errors);
-        if (errorKeys.length > 0) {
-          const firstKey = errorKeys[0];
-          const firstValue = data.errors[firstKey][0];
-          return `Error with ${firstKey}: ${firstValue}`;
-        }
-      }
-
-      return data.message || defaultMessage;
-    },
-
     async saveSettings() {
       await this.confirmUnsavedChanges();
 
@@ -356,9 +342,7 @@ export default {
         this.$emit('settings-updated');
         this.close();
       } catch (error) {
-        console.error('Failed to save reservation settings:', error);
-
-        this.error = this.handleApiError(error, 'Failed to save settings.');
+        this.error = error.message;
       } finally {
         this.isSaving = false;
       }
